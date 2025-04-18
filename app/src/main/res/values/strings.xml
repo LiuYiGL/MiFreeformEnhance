@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">MiFreeformEnhance</string>
+    <string name="xposed_desc" translatable="false">Make freeform of miui/hyper better!</string>
+    <string name="xposed_state">Xposed State</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="scope">Scope</string>
+</resources>

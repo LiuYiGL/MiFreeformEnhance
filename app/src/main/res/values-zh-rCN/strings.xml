@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hyper 小窗优化</string>
+    <string name="xposed_state">Xposed 状态</string>
+    <string name="enabled">已激活</string>
+    <string name="disabled">未激活</string>
+    <string name="scope">作用域</string>
+</resources>
