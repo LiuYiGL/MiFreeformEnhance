@@ -16,6 +16,7 @@ import name.liuyi.mifreeformenhance.common.XLogManager
 import name.liuyi.mifreeformenhance.provider.RemotePreferences
 import name.liuyi.mifreeformenhance.ui.screen.HomeScreen
 import name.liuyi.mifreeformenhance.ui.screen.MiuiHomeScreen
+import name.liuyi.mifreeformenhance.ui.screen.SystemScreen
 
 class MainActivity : ComponentActivity(), XLogManager.LogScope {
 
@@ -63,6 +64,9 @@ class MainActivity : ComponentActivity(), XLogManager.LogScope {
                         }
                         composable("com.miui.home") {
                             MiuiHomeScreen(navController)
+                        }
+                        composable("android") {
+                            SystemScreen(navController)
                         }
                     }
                 }

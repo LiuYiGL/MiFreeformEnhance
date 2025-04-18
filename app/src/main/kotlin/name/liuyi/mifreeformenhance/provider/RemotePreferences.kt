@@ -172,29 +172,49 @@ class RemotePreferences(initMap: Map<String, Any?> = HashMap()) : SharedPreferen
             var keysCleared = false
             for (uri in uris) {
                 if (uri == null) continue
-                val segments = uri.pathSegments
-                when (uriMatcher.match(uri)) {
-                    1 -> mMap[segments[1]] = segments[2].toBoolean().also { updateKeys.add(segments[1]) }
-                    2 -> mMap[segments[1]] = segments[2].toInt().also { updateKeys.add(segments[1]) }
-                    3 -> mMap[segments[1]] = segments[2].toLong().also { updateKeys.add(segments[1]) }
-                    4 -> mMap[segments[1]] = segments[2].toFloat().also { updateKeys.add(segments[1]) }
-                    5 -> mMap[segments[1]] = segments[2].also { updateKeys.add(segments[1]) }
-                    6 -> mMap[segments[1]] = HashSet(segments.subList(2, segments.size)).also {
-                        updateKeys.add(segments[1])
-                    }
+                runCatching {
+                    val segments = uri.pathSegments
+                    when (uriMatcher.match(uri)) {
+                        1 -> mMap[segments[1]] = segments[2].toBoolean().also { updateKeys.add(segments[1]) }
+                        2 -> mMap[segments[1]] = segments[2].toInt().also { updateKeys.add(segments[1]) }
+                        3 -> mMap[segments[1]] = segments[2].toLong().also { updateKeys.add(segments[1]) }
+                        4 -> mMap[segments[1]] = segments[2].toFloat().also { updateKeys.add(segments[1]) }
+                        5 -> mMap[segments[1]] = segments[2].also { updateKeys.add(segments[1]) }
+                        6 -> mMap[segments[1]] = HashSet(segments.subList(2, segments.size)).also {
+                            updateKeys.add(segments[1])
+                        }
 
-                    7 -> mMap.remove(segments[1]).also { updateKeys.add(segments[1]) }
-                    8 -> mMap.clear().also { keysCleared = true }
+                        7 -> mMap.remove(segments[1]).also { updateKeys.add(segments[1]) }
+                        8 -> mMap.clear().also { keysCleared = true }
+                    }
+                }.onFailure {
+                    e("RemotePreferences.Observer onChange: $it", it)
                 }
             }
             if (keysCleared) {
                 for (listener in mListeners) {
-                    listener.onSharedPreferenceChanged(this@RemotePreferences, null)
+                    listener.runCatching {
+                        onSharedPreferenceChanged(this@RemotePreferences, null)
+                    }.onFailure {
+                        if (listener is XLogManager.LogScope) {
+                            listener.e("RemotePreferences.Observer onChange: $it", it)
+                        } else {
+                            e("RemotePreferences.Observer onChange: $it", it)
+                        }
+                    }
                 }
             }
             for (updateKey in updateKeys) {
                 for (listener in mListeners) {
-                    listener.onSharedPreferenceChanged(this@RemotePreferences, updateKey)
+                    listener.runCatching {
+                        onSharedPreferenceChanged(this@RemotePreferences, updateKey)
+                    }.onFailure {
+                        if (listener is XLogManager.LogScope) {
+                            listener.e("RemotePreferences.Observer onChange: $it", it)
+                        } else {
+                            e("RemotePreferences.Observer onChange: $it", it)
+                        }
+                    }
                 }
             }
         }

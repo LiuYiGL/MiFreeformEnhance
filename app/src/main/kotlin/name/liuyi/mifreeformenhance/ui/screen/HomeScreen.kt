@@ -45,6 +45,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 const val MiuiHomePackageName: String = "com.miui.home"
+const val AndroidPackageName: String = "android"
 
 @Composable
 fun HomeScreen(navController: NavHostController = rememberNavController()) {
@@ -52,11 +53,15 @@ fun HomeScreen(navController: NavHostController = rememberNavController()) {
     val prefs = LocalSharedPreferences.current
     val packageManager: PackageManager? = LocalContext.current.packageManager
     var miuiHomeLabel by remember { mutableStateOf<String>("") }
+    var systemLabel by remember { mutableStateOf<String>("") }
 
     val configuration = LocalConfiguration.current
     DisposableEffect(configuration) {
         packageManager?.getPackageInfo(MiuiHomePackageName, 0)?.applicationInfo?.let {
             miuiHomeLabel = packageManager.getApplicationLabel(it).toString()
+        }
+        packageManager?.getPackageInfo(AndroidPackageName, 0)?.applicationInfo?.let {
+            systemLabel = packageManager.getApplicationLabel(it).toString()
         }
         onDispose { }
     }
@@ -99,6 +104,11 @@ fun HomeScreen(navController: NavHostController = rememberNavController()) {
             }
             SmallTitle(stringResource(R.string.scope))
             Card(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 12.dp)) {
+                SuperArrow(
+                    title = systemLabel,
+                    summary = AndroidPackageName,
+                    onClick = { navController.navigate(AndroidPackageName) }
+                )
                 SuperArrow(
                     title = miuiHomeLabel,
                     summary = MiuiHomePackageName,

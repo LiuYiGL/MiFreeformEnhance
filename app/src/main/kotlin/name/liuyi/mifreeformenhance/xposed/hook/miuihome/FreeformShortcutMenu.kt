@@ -65,10 +65,9 @@ object FreeformShortcutMenu : BaseHook() {
             startHook()
         }
         prefs.registerOnSharedPreferenceChangeListener { prefs, key ->
-            if (key == null || !prefs.getBoolean(key, false)) {
-                clean()
-            } else {
-                startHook()
+            when(key) {
+                null -> clean()
+                "home_freeform_shortcut" -> if (prefs.getBoolean(key, false)) startHook() else clean()
             }
             createAllSystemShortcutMenuItems(null)
         }

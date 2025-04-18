@@ -66,4 +66,14 @@ open class BaseHook : IBaseHook, XLogManager.LogScope {
             d("hook member after ${this@after} success")
         }
     }
+
+    protected infix fun Member.alwaysReturn(returnValue: Any?): XC_MethodHook.Unhook {
+        return XposedBridge.hookMethod(this, object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                param.result = returnValue
+            }
+        }).also {
+            d("hook member alwaysReturn ${this@alwaysReturn} by $returnValue success")
+        }
+    }
 }
