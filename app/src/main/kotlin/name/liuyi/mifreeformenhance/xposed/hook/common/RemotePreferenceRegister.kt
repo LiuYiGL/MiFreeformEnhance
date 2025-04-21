@@ -6,11 +6,12 @@ import name.liuyi.mifreeformenhance.common.Reflection.invoke
 import name.liuyi.mifreeformenhance.provider.RemotePreferences
 import name.liuyi.mifreeformenhance.xposed.app.HookMiuiHome
 import name.liuyi.mifreeformenhance.xposed.app.HookSystem
+import name.liuyi.mifreeformenhance.xposed.app.HookSystemUI
 import name.liuyi.mifreeformenhance.xposed.base.BaseApp
 import name.liuyi.mifreeformenhance.xposed.base.BaseHook
 import name.liuyi.mifreeformenhance.xposed.base.annotation.HookEntry
 
-@HookEntry(scope = [HookMiuiHome::class, HookSystem::class])
+@HookEntry(scope = [HookMiuiHome::class, HookSystem::class, HookSystemUI::class])
 object RemotePreferenceRegister : BaseHook() {
 
     override fun onStartup(app: BaseApp) {

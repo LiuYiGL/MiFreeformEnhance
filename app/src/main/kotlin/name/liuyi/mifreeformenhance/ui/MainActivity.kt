@@ -17,6 +17,7 @@ import name.liuyi.mifreeformenhance.provider.RemotePreferences
 import name.liuyi.mifreeformenhance.ui.screen.HomeScreen
 import name.liuyi.mifreeformenhance.ui.screen.MiuiHomeScreen
 import name.liuyi.mifreeformenhance.ui.screen.SystemScreen
+import name.liuyi.mifreeformenhance.ui.screen.SystemUIScreen
 
 class MainActivity : ComponentActivity(), XLogManager.LogScope {
 
@@ -31,10 +32,10 @@ class MainActivity : ComponentActivity(), XLogManager.LogScope {
         )
 
         mPrefs = runCatching {
-            getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_WORLD_READABLE)
+            getSharedPreferences("${BuildConfig.APPLICATION_ID}_preferences", MODE_WORLD_READABLE)
         }.getOrElse {
-            getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE)
-        }.let { RemotePreferences(it).also { it.attachContentResolver(contentResolver) } }
+            getSharedPreferences("${BuildConfig.APPLICATION_ID}_preferences", MODE_PRIVATE)
+        }.let { RemotePreferences(it).apply { attachContentResolver(contentResolver) } }
 
         setContent {
             AppTheme {
@@ -67,6 +68,9 @@ class MainActivity : ComponentActivity(), XLogManager.LogScope {
                         }
                         composable("android") {
                             SystemScreen(navController)
+                        }
+                        composable("com.android.systemui") {
+                            SystemUIScreen(navController)
                         }
                     }
                 }

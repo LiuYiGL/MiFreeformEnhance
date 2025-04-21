@@ -9,7 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,24 +46,27 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 const val MiuiHomePackageName: String = "com.miui.home"
 const val AndroidPackageName: String = "android"
+const val SystemUIPackageName: String = "com.android.systemui"
 
 @Composable
 fun HomeScreen(navController: NavHostController = rememberNavController()) {
     val topAppBarScrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
     val prefs = LocalSharedPreferences.current
     val packageManager: PackageManager? = LocalContext.current.packageManager
-    var miuiHomeLabel by remember { mutableStateOf<String>("") }
-    var systemLabel by remember { mutableStateOf<String>("") }
+    var miuiHomeLabel by remember { mutableStateOf("") }
+    var systemLabel by remember { mutableStateOf("") }
+    var systemUILabel by remember { mutableStateOf("") }
 
-    val configuration = LocalConfiguration.current
-    DisposableEffect(configuration) {
+    LaunchedEffect(LocalConfiguration.current) {
         packageManager?.getPackageInfo(MiuiHomePackageName, 0)?.applicationInfo?.let {
             miuiHomeLabel = packageManager.getApplicationLabel(it).toString()
         }
         packageManager?.getPackageInfo(AndroidPackageName, 0)?.applicationInfo?.let {
             systemLabel = packageManager.getApplicationLabel(it).toString()
         }
-        onDispose { }
+        packageManager?.getPackageInfo(SystemUIPackageName, 0)?.applicationInfo?.let {
+            systemUILabel = packageManager.getApplicationLabel(it).toString()
+        }
     }
 
     Scaffold(
@@ -108,6 +111,11 @@ fun HomeScreen(navController: NavHostController = rememberNavController()) {
                     title = systemLabel,
                     summary = AndroidPackageName,
                     onClick = { navController.navigate(AndroidPackageName) }
+                )
+                SuperArrow(
+                    title = systemUILabel,
+                    summary = SystemUIPackageName,
+                    onClick = { navController.navigate(SystemUIPackageName) }
                 )
                 SuperArrow(
                     title = miuiHomeLabel,
