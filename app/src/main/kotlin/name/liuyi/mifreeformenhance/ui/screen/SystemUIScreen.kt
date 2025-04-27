@@ -1,6 +1,7 @@
 package name.liuyi.mifreeformenhance.ui.screen
 
 import android.content.pm.PackageManager
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,6 +31,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import name.liuyi.mifreeformenhance.ui.LocalSharedPreferences
 import name.liuyi.mifreeformenhance.ui.component.NavigationPopIcon
+import name.liuyi.mifreeformenhance.ui.component.RebootAppAction
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.LazyColumn
@@ -51,10 +53,17 @@ fun SystemUIScreen(navController: NavHostController = rememberNavController()) {
     var label by remember { mutableStateOf("") }
     val pm: PackageManager? = LocalContext.current.packageManager
     val prefs = LocalSharedPreferences.current
+    val allowNotificationSlide = remember { mutableStateListOf<String>() }
 
     LaunchedEffect(LocalConfiguration.current) {
         pm?.getPackageInfo(SystemUIPackageName, 0)?.applicationInfo?.let {
             label = pm.getApplicationLabel(it).toString()
+        }
+        if (pm != null) {
+            val resources = pm.getResourcesForApplication(SystemUIPackageName)
+            resources.getIdentifier("config_allowNotificationSlide", "array", SystemUIPackageName).let { id ->
+                resources.getStringArray(id)
+            }.also { allowNotificationSlide.addAll(it) }
         }
     }
 
@@ -64,6 +73,7 @@ fun SystemUIScreen(navController: NavHostController = rememberNavController()) {
                 title = label,
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = { NavigationPopIcon(navController) },
+                actions = { RebootAppAction(SystemUIPackageName) }
             )
         }
     ) { padding ->
@@ -85,44 +95,8 @@ fun SystemUIScreen(navController: NavHostController = rememberNavController()) {
                         prefs.edit { putBoolean("remove_freeform_notification_whitelist", it) }
                     },
                     rightActions = {
-                        val show = remember { mutableStateOf(false) }
-                        val map = remember { mutableStateMapOf<String, String>() }
-                        LaunchedEffect(Unit) {
-                            pm?.getResourcesForApplication(SystemUIPackageName)?.let {
-                                val id = it.getIdentifier("config_allowNotificationSlide", "array", SystemUIPackageName)
-                                for (packageName in it.getStringArray(id)) {
-                                    packageName.runCatching {
-                                        map[packageName] = pm.getPackageInfo(packageName, 0)?.applicationInfo?.let {
-                                            pm.getApplicationLabel(it).toString()
-                                        } ?: packageName
-                                    }.onFailure {
-                                        map[packageName] = packageName
-                                    }
-                                }
-                            }
-                        }
-                        SuperDialog(
-                            modifier = Modifier.statusBarsPadding(),
-                            title = "默认允许下拉应用",
-                            show = show,
-                            onDismissRequest = { dismissDialog(show) }) {
-                            Column {
-                                LazyColumn(modifier = Modifier.height(540.dp)) {
-                                    items(map.keys.toList()) { packageName ->
-                                        SelectionContainer {
-                                            BasicComponent(title = map[packageName], summary = packageName)
-                                        }
-                                    }
-                                }
-                                TextButton(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp),
-                                    text = "关闭",
-                                    onClick = { dismissDialog(show) })
-                            }
-                        }
-                        if (!map.isEmpty()) {
+                        if (allowNotificationSlide.isNotEmpty()) {
+                            val show = remember { mutableStateOf(false) }
                             SmallTitle(
                                 text = "查看",
                                 modifier = Modifier.clickable(
@@ -131,6 +105,33 @@ fun SystemUIScreen(navController: NavHostController = rememberNavController()) {
                                     show.value = true
                                 },
                             )
+                            SuperDialog(
+                                modifier = Modifier.statusBarsPadding(),
+                                title = "默认允许下拉应用",
+                                show = show,
+                                onDismissRequest = { dismissDialog(show) }) {
+                                Column {
+                                    LazyColumn(modifier = Modifier.height(540.dp)) {
+                                        items(allowNotificationSlide) { packageName ->
+                                            val title = packageName.runCatching {
+                                                pm?.getPackageInfo(packageName, 0)?.applicationInfo?.let {
+                                                    pm.getApplicationLabel(it).toString()
+                                                }
+                                            }.getOrNull() ?: packageName
+                                            SelectionContainer {
+                                                BasicComponent(title = title, summary = packageName)
+                                            }
+                                        }
+                                    }
+                                    TextButton(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                        text = "关闭",
+                                        onClick = { dismissDialog(show) },
+                                    )
+                                }
+                            }
                         }
                     }
                 )
@@ -141,6 +142,46 @@ fun SystemUIScreen(navController: NavHostController = rememberNavController()) {
                         prefs.edit { putBoolean("forbid_freeform_notification_whitelist_cloud", it) }
                     },
                 )
+            }
+            Card(
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+            ) {
+                SuperSwitch(
+                    title = "隐藏顶栏",
+                    checked = prefs.getBoolean("hide_top_caption", false),
+                    onCheckedChange = {
+                        prefs.edit { putBoolean("hide_top_caption", it) }
+                    },
+                )
+                AnimatedVisibility(!prefs.getBoolean("hide_top_caption", false)) {
+                    Column {
+                        SuperSwitch(
+                            title = "隐藏顶栏小圆点",
+                            checked = prefs.getBoolean("hide_top_dots", false),
+                            onCheckedChange = {
+                                prefs.edit { putBoolean("hide_top_dots", it) }
+                            },
+                        )
+                    }
+                }
+                SuperSwitch(
+                    title = "隐藏底栏",
+                    checked = prefs.getBoolean("hide_bottom_caption", false),
+                    onCheckedChange = {
+                        prefs.edit { putBoolean("hide_bottom_caption", it) }
+                    },
+                )
+                AnimatedVisibility(!prefs.getBoolean("hide_bottom_caption", false)) {
+                    Column {
+                        SuperSwitch(
+                            title = "隐藏底栏小白条",
+                            checked = prefs.getBoolean("hide_bottom_bar", false),
+                            onCheckedChange = {
+                                prefs.edit { putBoolean("hide_bottom_bar", it) }
+                            },
+                        )
+                    }
+                }
             }
         }
     }

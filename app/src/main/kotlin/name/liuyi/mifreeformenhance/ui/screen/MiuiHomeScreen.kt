@@ -26,6 +26,7 @@ import name.liuyi.mifreeformenhance.provider.RemotePreferences
 import name.liuyi.mifreeformenhance.ui.AppTheme
 import name.liuyi.mifreeformenhance.ui.LocalSharedPreferences
 import name.liuyi.mifreeformenhance.ui.component.NavigationPopIcon
+import name.liuyi.mifreeformenhance.ui.component.RebootAppAction
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -55,6 +56,7 @@ fun MiuiHomeScreen(navController: NavHostController = rememberNavController()) {
                 title = miuiHomeLabel,
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = { NavigationPopIcon(navController) },
+                actions = { RebootAppAction(MiuiHomePackageName) }
             )
         }
     ) { padding ->
